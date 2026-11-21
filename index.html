@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Yeti Memory – match the planet savers</title>
+<style>
+:root{--bg:#eaf4f9;--surface:#fff;--ink:#0e2a3b;--muted:#4d6676;--accent:#1f86b3;--back:#1f86b3;--ok:#3f8a4a;--line:#cfe0ea;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0a1c28;--surface:#10293a;--ink:#e8f4f8;--muted:#9bb6c6;--accent:#5cc0ee;--back:#1d5a78;--ok:#8bc98f;--line:#1f4358;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0a1c28;--surface:#10293a;--ink:#e8f4f8;--muted:#9bb6c6;--accent:#5cc0ee;--back:#1d5a78;--ok:#8bc98f;--line:#1f4358;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Trebuchet MS,Segoe UI,sans-serif}
+main{max-width:480px;margin:0 auto;padding:22px 16px 40px;text-align:center}
+h1{font:700 clamp(1.8rem,8vw,2.4rem)/1.1 Georgia,serif;margin:0 0 6px}
+p{margin:0 0 14px;color:var(--muted)}
+.bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.bar button{border:0;background:var(--accent);color:#fff;font:inherit;font-weight:700;padding:9px 14px;border-radius:8px;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.c{aspect-ratio:1;border:0;border-radius:12px;background:var(--back);color:#fff;font-size:clamp(1.6rem,9vw,2.4rem);cursor:pointer;display:grid;place-items:center;transition:transform .25s,background .25s}
+.c.o{background:var(--surface);border:2px solid var(--line);transform:rotateY(0)}
+.c.m{background:var(--surface);border:2px solid var(--ok)}
+.c:focus-visible,.bar button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.win{margin-top:18px;padding:16px;border:2px solid var(--ok);border-radius:12px;background:var(--surface);display:none}
+.win b{display:block;font:700 1.2rem Georgia,serif;color:var(--ok);margin-bottom:4px}
+@media (prefers-reduced-motion:reduce){.c{transition:none}}
+</style>
+</head>
+<body>
+<main>
+<h1>Yeti Memory</h1>
+<p>Find all 8 pairs of planet savers. Fewer moves, higher score.</p>
+<div class="bar"><span id="mv">Moves: 0</span><span id="best">Best: –</span><button id="rs">New game</button></div>
+<div class="grid" id="g" role="group" aria-label="Memory cards"></div>
+<div class="win" id="w" role="status"></div>
+</main>
+<script>
+var I=["🏔️","💧","🌱","♻️","🐋","🌍","☀️","🌊"],F=["Mountain glaciers store fresh water for billions of people.","Clean water is the base of every healthy community.","Planting trees protects soil and water.","Recycling keeps plastic out of rivers.","Healthy oceans need clean rivers.","One planet, shared by everyone.","Solar power can run pumps and filters.","Every river ends in the sea."];
+var g=document.getElementById("g"),mv=document.getElementById("mv"),bs=document.getElementById("best"),w=document.getElementById("w");
+var open=[],moves=0,found=0,lock=false,best=null;
+try{var b=localStorage.getItem("yetiBest");if(b)best=+b}catch(e){}
+function show(){bs.textContent="Best: "+(best||"–")}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
+function start(){
+g.innerHTML="";w.style.display="none";open=[];moves=0;found=0;lock=false;mv.textContent="Moves: 0";show();
+shuffle(I.concat(I)).forEach(function(s){
+var c=document.createElement("button");c.className="c";c.dataset.s=s;c.setAttribute("aria-label","Hidden card");c.textContent="❄️";
+c.onclick=function(){flip(c)};g.appendChild(c)})}
+function face(c){var i=I.indexOf(c.dataset.s);c.innerHTML="";var m=new Image();m.alt=c.dataset.s;m.src="images/"+(i+1)+".png";m.style.cssText="width:80%;height:80%;object-fit:contain";m.onerror=function(){c.textContent=c.dataset.s};c.appendChild(m)}
+function flip(c){
+if(lock||c.classList.contains("o")||c.classList.contains("m"))return;
+c.classList.add("o");face(c);c.setAttribute("aria-label","Card "+c.dataset.s);open.push(c);
+if(open.length<2)return;
+moves++;mv.textContent="Moves: "+moves;
+var a=open[0],d=open[1];
+if(a.dataset.s===d.dataset.s){a.classList.add("m");d.classList.add("m");open=[];found++;if(found===8)won(a.dataset.s)}
+else{lock=true;setTimeout(function(){[a,d].forEach(function(x){x.classList.remove("o");x.textContent="❄️";x.setAttribute("aria-label","Hidden card")});open=[];lock=false},800)}}
+function won(){
+if(!best||moves<best){best=moves;try{localStorage.setItem("yetiBest",best)}catch(e){}}show();
+w.innerHTML="<b>All pairs found in "+moves+" moves!</b>"+F[Math.floor(Math.random()*F.length)];w.style.display="block"}
+document.getElementById("rs").onclick=start;
+start();
+</script>
+</body>
+</html>
